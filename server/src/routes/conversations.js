@@ -108,16 +108,42 @@ router.post("/", auth, async (req, res) => {
 router.get("/users", auth, async (req, res) => {
   const page = parseInt(req.query.page) || 0;
   const limit = parseInt(req.query.limit) || 10;
+  const search = req.query.search || "";
 
-  const users = await User.find(
-    { _id: { $ne: req.userId } },
-    "_id username email avatar",
-  )
-    .skip(page * limit)
-    .limit(limit)
-    .sort({ createdAt: -1 });
+  try {
+    // 1. Tìm danh sách users dựa trên search term
+    const query = {
+      _id: { $ne: req.userId }, // Không lấy chính mình
+      $or: [
+        { username: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } }
+      ]
+    };
 
-  res.json(users);
+    const users = await User.find(query, "_id username email avatar")
+      .skip(page * limit)
+      .limit(limit)
+      .sort({ username: 1 })
+      .lean(); // Dùng lean() để convert sang plain object, dễ thêm field tùy biến
+
+    // 2. (Optionally) Check xem đã có hội thoại 1-1 với những người này chưa
+    // Cái này rất tiện cho Frontend: Nếu có rồi thì bấm vào bay thẳng vào chat cũ
+    const usersWithConv = await Promise.all(users.map(async (user) => {
+      const conversation = await Conversation.findOne({
+        isGroup: false,
+        members: { $all: [req.userId, user._id] }
+      }, "_id");
+
+      return {
+        ...user,
+        conversationId: conversation ? conversation._id : null
+      };
+    }));
+
+    res.json(usersWithConv);
+  } catch (error) {
+    res.status(500).json({ message: "Lỗi khi tìm kiếm người dùng" });
+  }
 });
 
 module.exports = router;

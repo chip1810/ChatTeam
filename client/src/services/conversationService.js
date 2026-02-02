@@ -1,9 +1,9 @@
 import api from "./api";
 
 const conversationService = {
-  getChatUsers(page, limit = 10) {
+  getChatUsers(search = "", page = 0, limit = 10) {
     return api.get("/api/conversations/users", {
-      params: { page, limit },
+      params: { search, page, limit }, // Gửi search lên backend
     });
   },
 

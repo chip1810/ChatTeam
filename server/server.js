@@ -18,6 +18,9 @@ const Conversation = require("./src/models/Conversation");
 const authRoutes = require("./src/routes/auth");
 const conversationRoutes = require("./src/routes/conversations");
 const profileRoutes = require("./src/routes/profile");
+const eventRoutes = require("./src/routes/events")
+const gameRoutes = require("./src/routes/game")
+
 
 /* =======================
    3. INIT EXPRESS APP
@@ -32,6 +35,7 @@ app.use(
     origin: [
       "http://localhost:5173",
       "https://0d899qvr-5173.asse.devtunnels.ms",
+      /https:\/\/.*\.ngrok-free\.app$/,
     ],
     credentials: true,
   }),
@@ -45,7 +49,8 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use("/api/auth", authRoutes);
 app.use("/api/conversations", conversationRoutes);
 app.use("/api/profile", profileRoutes);
-
+app.use("/api/events", eventRoutes);
+app.use("/api/game", gameRoutes)
 /* =======================
    6. CREATE HTTP SERVER
 ======================= */
@@ -67,6 +72,7 @@ const io = new Server(server, {
     origin: [
       "http://localhost:5173",
       "https://0d899qvr-5173.asse.devtunnels.ms",
+      /https:\/\/.*\.ngrok-free\.app$/,
     ],
     credentials: true,
   },
@@ -138,6 +144,8 @@ io.on("connection", (socket) => {
       .populate("readBy", "username avatar");
 
     socket.emit("chat-history", messages);
+
+    
   });
 
   /* ======================
