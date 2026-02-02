@@ -40,12 +40,14 @@ router.post("/register", async (req, res) => {
 
 // login
 router.post("/login", async (req, res) => {
+  console.log("BODY:", req.body);
   const { identifier, password } = req.body;
 
   // tìm theo email hoặc username
   const user = await User.findOne({
     $or: [{ email: identifier }, { username: identifier }],
   });
+  console.log(user);
 
   if (!user) {
     return res.status(400).json({ message: "Thông tin đăng nhập không hợp lệ" });

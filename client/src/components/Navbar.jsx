@@ -1,5 +1,5 @@
-import { Layout, Button, Typography, Space, Avatar, Dropdown } from "antd";
-import { UserOutlined, LogoutOutlined, LoginOutlined, UserAddOutlined } from "@ant-design/icons";
+import { Layout, Button, Typography, Space, Avatar, Dropdown, Menu } from "antd";
+import { UserOutlined, LogoutOutlined, LoginOutlined, UserAddOutlined, AppstoreOutlined, MessageOutlined  } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 
 const { Header } = Layout;
@@ -24,12 +24,27 @@ export default function Navbar({ user, onLogout, onNavigate, openAuth }) {
     },
   ];
 
+  const navigationItems = [
+    {
+      key: "/",
+      label: "Diễn đàn",
+      icon: <AppstoreOutlined />,
+      onClick: () => navigate("/"),
+    },
+    {
+      key: "/chat",
+      label: "Tin nhắn",
+      icon: <MessageOutlined />,
+      onClick: () => navigate("/chat"),
+    },
+  ];
+
   return (
-    <Header style={{ 
-      display: 'flex', 
-      justifyContent: 'space-between', 
-      alignItems: 'center', 
-      background: '#fff', 
+    <Header style={{
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      background: '#fff',
       padding: '0 20px',
       borderBottom: '1px solid #f0f0f0',
       boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
@@ -39,11 +54,22 @@ export default function Navbar({ user, onLogout, onNavigate, openAuth }) {
         <Title level={3} style={{ margin: 0, color: '#1677ff' }}>FuwaChat</Title>
       </div>
 
+      <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+        {user && (
+          <Menu
+            mode="horizontal"
+            selectedKeys={[location.pathname]} // Tự động sáng tab đang đứng
+            items={navigationItems}
+            style={{ borderBottom: 'none', minWidth: 300, justifyContent: 'center' }}
+          />
+        )}
+      </div>
+
       <Space size="middle">
         {user ? (
           <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" arrow>
             <Space style={{ cursor: 'pointer' }}>
-              <Avatar src={user.avatar ||`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`} />
+              <Avatar src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`} />
               <Text strong>{user.username}</Text>
             </Space>
           </Dropdown>
@@ -53,8 +79,8 @@ export default function Navbar({ user, onLogout, onNavigate, openAuth }) {
             <Button onClick={() => { onNavigate('login'); openAuth(); }}>
               Đăng nhập
             </Button>
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               onClick={() => { onNavigate('register'); openAuth(); }}
             >
               Đăng ký

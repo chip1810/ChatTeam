@@ -52,8 +52,8 @@ router.put("/update", auth, async (req, res) => {
     // 3. Cập nhật bảng UserProfile (Các thông tin còn lại)
     const profile = await UserProfile.findOneAndUpdate(
       { user: req.userId },
-      { 
-        $set: { displayName, bio, phoneNumber, address, gender, dob, avatar: avatarUrl || undefined } 
+      {
+        $set: { displayName, bio, phoneNumber, address, gender, dob, avatar: avatarUrl || undefined }
       },
       { new: true, upsert: true }
     );
