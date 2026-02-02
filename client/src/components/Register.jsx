@@ -1,18 +1,18 @@
 import { useState } from "react";
 import { Form, Input, Button, Typography, message } from "antd";
 import { UserOutlined, LockOutlined, MailOutlined } from "@ant-design/icons";
-import axios from "axios";
+import authService from "../services/authService";
 
 const { Title, Text } = Typography;
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
 export default function Register({ onNavigate }) {
   const [loading, setLoading] = useState(false);
+  
 
   const onFinish = async (values) => {
     setLoading(true);
     try {
-      const res = await axios.post(`${BACKEND_URL}/api/auth/register`, values);
+      const res = await authService.register(values);
       message.success(res.data.message || "Đăng ký thành công!");
       
       // Chuyển sang form Login ngay lập tức trong cùng 1 Modal
@@ -42,7 +42,7 @@ export default function Register({ onNavigate }) {
           name="username"
           rules={[{ required: true, message: "Bạn tên là gì nhỉ?" }]}
         >
-          <Input prefix={<UserOutlined />} placeholder="Tên hiển thị" />
+          <Input prefix={<UserOutlined />} placeholder="Tên đăng nhập" />
         </Form.Item>
 
         <Form.Item

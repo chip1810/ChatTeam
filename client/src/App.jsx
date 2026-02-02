@@ -1,32 +1,57 @@
 import { useState, useEffect } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom"; // Thêm BrowserRouter
 import axios from "axios";
 import { socket } from "./socket";
+import { Layout, Spin, ConfigProvider, Modal, Typography } from "antd";
+
+// Components
 import Login from "./components/Login";
 import Register from "./components/Register";
 import ConversationList from "./components/ConversationList";
 import ChatBox from "./components/ChatBox";
 import Navbar from "./components/Navbar";
-// THÊM Modal và Typography vào đây
-import { Layout, Spin, ConfigProvider, Modal, Typography } from "antd";
+import Profile from "./components/Profile";
+import ConversationSideBar from "./components/ConversationSidebar";
+import OtherProfile from "./components/OtherProfile";
 
 const { Sider, Content } = Layout;
 const { Title } = Typography;
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
-// Định nghĩa nhanh WelcomeScreen để không bị lỗi trắng trang
-const WelcomeScreen = () => (
-  <div
-    style={{
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      height: "100%",
-      background: "#f9f9f9",
-      color: "#8c8c8c",
-    }}
-  >
-    <h3>Chọn một cuộc trò chuyện để bắt đầu</h3>
-  </div>
+// Giao diện Chat tách riêng cho gọn
+const ChatHome = ({ user, conversationId, setConversationId }) => (
+  <Layout style={{ height: "100%" }}>
+    <Sider
+      width={350}
+      theme="light"
+      style={{ borderRight: "1px solid #f0f0f0" }}
+    >
+      <ConversationSideBar user={user} onSelect={setConversationId} />
+    </Sider>
+    <Content style={{ background: "#fff" }}>
+      {conversationId ? (
+        <ChatBox conversationId={conversationId} user={user} />
+      ) : (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "100%",
+            background: "#f9f9f9",
+            color: "#8c8c8c",
+          }}
+        >
+          <h3>Chọn một cuộc trò chuyện để bắt đầu</h3>
+        </div>
+      )}
+    </Content>
+  </Layout>
 );
 
 export default function App() {
@@ -36,7 +61,6 @@ export default function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState("login");
 
-  // Chỉ cần 1 useEffect này là đủ
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem("token");
@@ -49,6 +73,7 @@ export default function App() {
           setIsModalOpen(false);
           socket.auth = { token };
           socket.connect();
+          console.log("🟢 socket connected:", socket.id);
         } catch {
           localStorage.removeItem("token");
           setIsModalOpen(true);
@@ -64,7 +89,7 @@ export default function App() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     setUser(null);
-    window.location.reload();
+    window.location.href = "/"; // Reset toàn bộ về trang chủ
   };
 
   if (loading) {
@@ -77,7 +102,7 @@ export default function App() {
           height: "100vh",
         }}
       >
-        <Spin size="large" tip="Đang khởi động FuwaChat..." />
+        <Spin size="large" fullscreen tip="Đang khởi động FuwaChat..." />
       </div>
     );
   }
@@ -86,72 +111,86 @@ export default function App() {
     <ConfigProvider
       theme={{ token: { colorPrimary: "#1677ff", borderRadius: 8 } }}
     >
-      <Layout style={{ height: "100vh" }}>
-        <Navbar
-          user={user}
-          onLogout={handleLogout}
-          onNavigate={setAuthMode} // Thêm cái này để đổi mode login/reg
-          openAuth={() => setIsModalOpen(true)}
-        />
+      <Router>
+        {" "}
+        {/* Bọc Router ở đây */}
+        <Layout style={{ height: "100vh" }}>
+          <Navbar
+            user={user}
+            onLogout={handleLogout}
+            // Loại bỏ onNavigate rườm rà ở đây
+            openAuth={() => setIsModalOpen(true)}
+            setAuthMode={setAuthMode} // Truyền để Navbar biết mở login hay register
+          />
 
-        <Layout style={{ height: "calc(100vh - 64px)" }}>
-          {user ? (
-            <>
-              <Sider
-                width={350}
-                theme="light"
-                style={{ borderRight: "1px solid #f0f0f0" }}
-              >
-                <ConversationList user={user} onSelect={setConversationId} />
-              </Sider>
-              <Content style={{ background: "#fff" }}>
-                {conversationId ? (
-                  <ChatBox conversationId={conversationId} user={user} />
-                ) : (
-                  <WelcomeScreen />
-                )}
-              </Content>
-            </>
-          ) : (
-            <Content
-              style={{
-                flex: 1,
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                background: "#f0f2f5",
-              }}
-            >
-              <Title level={4} type="secondary">
-                Vui lòng đăng nhập để sử dụng FuwaChat
-              </Title>
-            </Content>
-          )}
+          <Layout style={{ height: "calc(100vh - 64px)" }}>
+            <Routes>
+              <Route
+                path="/"
+                element={
+                  user ? (
+                    <ChatHome
+                      user={user}
+                      conversationId={conversationId}
+                      setConversationId={setConversationId}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        display: "flex",
+                        flex: 1,
+                        justifyContent: "center",
+                        alignItems: "center",
+                        background: "#f0f2f5",
+                      }}
+                    >
+                      <Title level={4} type="secondary">
+                        Vui lòng đăng nhập để sử dụng FuwaChat
+                      </Title>
+                    </div>
+                  )
+                }
+              />
+
+              <Route
+                path="/profile"
+                element={user ? <Profile /> : <Navigate to="/" />}
+              />
+              <Route
+                path="/profile/:userId"
+                element={user ? <OtherProfile /> : <Navigate to="/" />}
+              />
+            </Routes>
+          </Layout>
+
+          <Modal
+            open={isModalOpen}
+            onCancel={() => setIsModalOpen(false)}
+            footer={null}
+            width={450}
+            centered
+            destroyOnHidden
+          >
+            {authMode === "login" ? (
+              <Login
+                onLogin={async () => {
+                  const token = localStorage.getItem("token");
+                  const res = await axios.get(`${BACKEND_URL}/api/auth/me`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                  });
+                  setUser(res.data.user);
+                  setIsModalOpen(false);
+                  socket.auth = { token };
+                  socket.connect();
+                }}
+                onNavigate={setAuthMode}
+              />
+            ) : (
+              <Register onNavigate={setAuthMode} />
+            )}
+          </Modal>
         </Layout>
-
-        <Modal
-          open={isModalOpen}
-          onCancel={() => setIsModalOpen(false)}
-          closable={true}
-          maskClosable={true}
-          footer={null}
-          width={450}
-          centered
-          destroyOnClose
-        >
-          {authMode === "login" ? (
-            <Login
-              onLogin={(u) => {
-                setUser(u);
-                setIsModalOpen(false);
-              }}
-              onNavigate={setAuthMode}
-            />
-          ) : (
-            <Register onNavigate={setAuthMode} />
-          )}
-        </Modal>
-      </Layout>
+      </Router>
     </ConfigProvider>
   );
 }

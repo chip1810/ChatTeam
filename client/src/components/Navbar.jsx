@@ -1,15 +1,23 @@
 import { Layout, Button, Typography, Space, Avatar, Dropdown } from "antd";
 import { UserOutlined, LogoutOutlined, LoginOutlined, UserAddOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 
 const { Header } = Layout;
 const { Title, Text } = Typography;
 
 export default function Navbar({ user, onLogout, onNavigate, openAuth }) {
+  const navigate = useNavigate();
   // Menu cho Dropdown khi bấm vào Avatar
   const userMenuItems = [
     {
-      key: 'logout',
-      label: 'Đăng xuất',
+      key: "profile",
+      label: "Trang cá nhân",
+      icon: <UserOutlined />,
+      onClick: () => navigate("/profile"), // Đi tới trang profile
+    },
+    {
+      key: "logout",
+      label: "Đăng xuất",
       icon: <LogoutOutlined />,
       danger: true,
       onClick: onLogout,
@@ -27,7 +35,7 @@ export default function Navbar({ user, onLogout, onNavigate, openAuth }) {
       boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
       zIndex: 1000 // Tăng zIndex lên cao hẳn
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={() => onNavigate('home')}>
+      <div style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={() => navigate("/")}>
         <Title level={3} style={{ margin: 0, color: '#1677ff' }}>FuwaChat</Title>
       </div>
 
@@ -35,7 +43,7 @@ export default function Navbar({ user, onLogout, onNavigate, openAuth }) {
         {user ? (
           <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" arrow>
             <Space style={{ cursor: 'pointer' }}>
-              <Avatar src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`} />
+              <Avatar src={user.avatar ||`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`} />
               <Text strong>{user.username}</Text>
             </Space>
           </Dropdown>

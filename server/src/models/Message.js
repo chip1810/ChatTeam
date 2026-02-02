@@ -10,7 +10,12 @@ const messageSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User"
   },
-  text: String
+  text: String,
+  images: [String], // Mảng lưu URLs của ảnh
+  readBy: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User"
+  }]
 }, { timestamps: true });
 
 module.exports = mongoose.model("Message", messageSchema);
